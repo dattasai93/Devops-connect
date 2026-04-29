@@ -32,8 +32,9 @@ jobs:
 
       - name: Validate Deployment
         run: |
-          sf project deploy validate \
-            --source-dir force-app
+          --source-dir force-app \
+          --target-org ${{ secrets.SF_USERNAME }} \
+          --test-level RunLocalTests
 
   deploy:
     needs: validate
@@ -59,4 +60,6 @@ jobs:
       - name: Deploy to Production
         run: |
           sf project deploy start \
-            --source-dir force-app
+            --source-dir force-app \
+            --target-org ${{ secrets.SF_USERNAME }} \
+            --test-level RunLocalTests
