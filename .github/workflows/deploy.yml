@@ -5,10 +5,10 @@ on:
     branches:
       - develop
       - main
-      - feature/**
+      - feature/*
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,21 +16,47 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Salesforce CLI
-        run: |
-          npm install --global @salesforce/cli
+        run: npm install -g @salesforce/cli
 
-      - name: Create JWT Key File
+      - name: Verify CLI
+        run: sf version
+
+      - name: Authenticate to Salesforce
         run: |
           echo "${{ secrets.SF_JWT_KEY }}" > server.key
-
-      - name: Authenticate Salesforce Org
-        run: |
           sf org login jwt \
             --client-id ${{ secrets.SF_CLIENT_ID }} \
-            --jwt-key-file server.key \
             --username ${{ secrets.SF_USERNAME }} \
+            --jwt-key-file server.key \
             --instance-url ${{ secrets.SF_LOGIN_URL }}
 
-      - name: Deploy to Salesforce
+      - name: Validate Deployment
         run: |
-          sf project deploy start --source-dir force-app
+          sf project deploy validate \
+            --source-dir force-app
+
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate to Salesforce
+        run: |
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CLIENT_ID }} \
+            --username ${{ secrets.SF_USERNAME }} \
+            --jwt-key-file server.key \
+            --instance-url ${{ secrets.SF_LOGIN_URL }}
+
+      - name: Deploy to Production
+        run: |
+          sf project deploy start \
+            --source-dir force-app
