@@ -1,0 +1,36 @@
+name: Salesforce CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - feature/**
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli
+
+      - name: Create JWT Key File
+        run: |
+          echo "${{ secrets.SF_JWT_KEY }}" > server.key
+
+      - name: Authenticate Salesforce Org
+        run: |
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CLIENT_ID }} \
+            --jwt-key-file server.key \
+            --username ${{ secrets.SF_USERNAME }} \
+            --instance-url ${{ secrets.SF_LOGIN_URL }}
+
+      - name: Deploy to Salesforce
+        run: |
+          sf project deploy start --source-dir force-app
