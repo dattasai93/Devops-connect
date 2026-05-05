@@ -1,5 +1,5 @@
 {
-  "orgName": "Demo company",
+  "orgName": "Dev Org",
   "edition": "Developer",
   "features": ["EnableSetPasswordInApi"],
   "settings": {
